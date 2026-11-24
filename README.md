@@ -1,6 +1,8 @@
-# Shared-state beam search for Gated DeltaNet
+# Exploring State Sharing for Beam Search in Generative Recommendation
 
-This package implements beam decoding for Gated DeltaNet (GDN). Prompt prefill produces a single state matrix per request and value head. During beam search, every live beam contributes a small transition record at each step. Children of the same parent share those records, even when their positions in the beam change. The package includes a PyTorch implementation, a fused Triton kernel for NVIDIA GPUs, and a small autoregressive example that generates ranked semantic IDs (SIDs).
+In generative recommendation, beam search produces many short semantic IDs (SIDs) from the same user history. This project explores how those beams can share the recurrent state of a Gated DeltaNet (GDN) layer.
+
+Prompt prefill computes a shared context state. Each decode step appends a transition record for each live beam. When two children select the same parent, their ancestry indices point to the same records. A fused GPU kernel reads the relevant records to compute the key and query projections for each child. [State representation and replay](#how-the-state-is-represented)
 
 ## Compare shared-state decoding and FullState on Qwen3.5-0.8B
 
@@ -27,7 +29,7 @@ The optional `--check-native` flag compares greedy decoding with the installed T
 
 ## Run the small SID example
 
-From the directory containing this README, use Python 3.10 or newer with PyTorch installed. The CPU example runs with synthetic prompts and a randomly initialized one-layer model.
+From the directory containing this README, use Python 3.10 or newer with PyTorch installed. The CPU example runs with synthetic prompts and a single randomly initialized GDN layer.
 
 ```bash
 python -m pip install -e .
